@@ -299,6 +299,8 @@ int main(int argc, char *argv[])
 	{
 		// run topic callbacks
 		ros::spinOnce();
+		if (ros::ok()) // exit loop once Ctrl + C is pressed
+			break;
 
 		// if max duration has passed, exit from loop
 		if (chrono::system_clock::now() >= endTime)
