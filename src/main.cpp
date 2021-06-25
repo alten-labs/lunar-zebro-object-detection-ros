@@ -189,12 +189,12 @@ void applyContourVisual(Mat &mat, vector<Point> contour, Point2f center)
 
 void stopCallback(const std_msgs::Bool::ConstPtr &msg)
 {
-	ROS_INFO("I heard: [%s]", msg->data);
+	ROS_INFO("I heard: [%s]", msg);
 }
 
 void dockingCallback(const std_msgs::Bool::ConstPtr &msg)
 {
-	ROS_INFO("I heard: [%s]", msg->data);
+	ROS_INFO("I heard: [%s]", msg);
 }
 
 int main(int argc, char *argv[])
