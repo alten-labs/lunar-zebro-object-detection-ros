@@ -268,7 +268,6 @@ int main(int argc, char* argv[])
 
 		// apply grayscale
 		Mat grayscaleImage = applyGrayscale(frame, Scalar(bl, gl, rl), Scalar(bh, gh, rh));
-		imshow("Flag", grayscaleImage);
 
 		// contours
 		vector<Point> mainContour = getContour(grayscaleImage);
@@ -277,25 +276,6 @@ int main(int argc, char* argv[])
 		if (center.x >= middleCoordinateWidth - VARIANCE * frameWidth &&
 			center.x <= middleCoordinateWidth + VARIANCE * frameWidth) {
 			cout << "Point is in the middle: " << center.x << ", " << center.y << endl;
-		}
-
-		Mat contourImage(grayscaleImage.size(), CV_8UC3, Scalar(0, 0, 0));
-		applyContourVisual(frame, mainContour, center);
-		applyContourVisual(contourImage, mainContour, center); // TODO: remove if necessary
-
-		imshow("Flag annotated", contourImage);
-
-		if (DEBUG) {
-			// calculate average FPS for camera video
-			frameCounter++;
-			time_t timeNow = time(0) - timeBegin;
-
-			if (timeNow - tick >= 1)
-			{
-				tick++;
-				fps = frameCounter;
-				frameCounter = 0;
-			}
 		}
 
 		Mat bbox; 
@@ -318,10 +298,31 @@ int main(int argc, char* argv[])
 		}
 
 		if (DEBUG) {
+			// calculate average FPS for camera video
+			frameCounter++;
+			time_t timeNow = time(0) - timeBegin;
+
+			if (timeNow - tick >= 1)
+			{
+				tick++;
+				fps = frameCounter;
+				frameCounter = 0;
+			}
+
 			// display bounding box around target
 			if (!data.empty()) {
 				display(frame, bbox, data);
 			}
+
+			// show contours
+			Mat contourImage(grayscaleImage.size(), CV_8UC3, Scalar(0, 0, 0));
+			applyContourVisual(frame, mainContour, center);
+			applyContourVisual(contourImage, mainContour, center); // TODO: remove if necessary
+
+			imshow("Flag annotated", contourImage);
+
+			// show flag in grayscale image
+			imshow("Flag", grayscaleImage);
 
 			// insert average FPS counter into image matrix
 			putText(frame, format("Average FPS=%d", fps), Point(10, 10), FONT_HERSHEY_SIMPLEX, FONT_SIZE, Scalar(100, 255, 0));
