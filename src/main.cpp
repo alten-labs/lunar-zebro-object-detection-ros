@@ -29,7 +29,6 @@ string keys =
 	"{ help h      |       | Print help message. }"
 	"{ debug d     | false | Includes window with marked targets if true. }"
 	"{ camera c    | 0     | Camera device number. }"
-	"{ duration    | 3600  | Maximum program duration in seconds before program exit. }"
 	"{ targets     |       | Target data to be matched against QR-decoded text. Separate individual strings by a comma. }"
 	"{ width       | 1920  | Width component camera video resolution. }"
 	"{ height      | 1080  | Height component camera video resolution. }"
@@ -41,6 +40,14 @@ constexpr int ROS_QUEUE_SIZE = 1000;
 constexpr double FONT_SIZE = 0.3;
 constexpr int MAX_COLOR_VALUE = 255;
 constexpr double VARIANCE = 0.05; // % distance from middle vertical line
+
+enum class State {
+	detect,
+	sleep,
+	docking,
+};
+
+State EXEC_STATE = State::detect;
 
 vector<string> parseStringArgument(string targets, char delimiter = ',')
 {
@@ -66,7 +73,7 @@ set<string> convertVectorToSet(vector<string> elements)
 	return uniqueElements;
 }
 
-void display(Mat &im, Mat &bbox, vector<string> data)
+void embed(Mat &im, Mat &bbox, vector<string> data)
 {
 	int n = bbox.rows;
 	for (int i = 0; i < n; i++)
@@ -204,11 +211,11 @@ int main(int argc, char *argv[])
 	ros::NodeHandle n;
 
 	// init subscribers
-	ros::Subscriber stopSub = n.subscribe("stop", ROS_QUEUE_SIZE, stopCallback);
+	ros::Subscriber stopSub = n.subscribe("stopCamera", ROS_QUEUE_SIZE, stopCallback);
 	ros::Subscriber dockingSub = n.subscribe("docking", ROS_QUEUE_SIZE, dockingCallback);
 
 	// init publishers
-	// TODO
+	// ros::Publisher
 
 	CommandLineParser parser(argc, argv, keys);
 	parser.about("Lunar Zebro navigation - QR Code detection v1.0.0\nAuthor: Y. Zwetsloot\n");
@@ -227,8 +234,6 @@ int main(int argc, char *argv[])
 		cout << "Running in debug mode" << endl;
 	else
 		cout << "Running in production mode" << endl;
-
-	const int MAX_DURATION = parser.get<int>("duration");
 
 	const string targets = parser.get<string>("targets");
 	set<string> targetNames = convertVectorToSet(parseStringArgument(targets));
@@ -274,22 +279,8 @@ int main(int argc, char *argv[])
 	cout << "\nCamera is open\nStart grabbing frames @ " << getCurrentTimeString() << " @ " << cap.get(CAP_PROP_FPS) << " frames/second"
 		 << " with " << frameWidth << "x" << frameHeight << endl
 		 << endl;
-	if (DEBUG)
-		cout << "Press any key to terminate\n"
-			 << endl;
-
-	// initialize variables for average FPS calculation
-	int frameCounter = 0;
-	int tick = 0;
-	int fps = 0;
-	time_t timeBegin = time(0);
 
 	QRDetector *detector = getDetector(parser.get<int>("detector"));
-
-	auto maxDuration = chrono::seconds(MAX_DURATION);
-
-	chrono::time_point<chrono::system_clock> endTime;
-	endTime = chrono::system_clock::now() + maxDuration;
 
 	// define color range parameters
 	int rh = 255, rl = 100, gh = 255, gl = 0, bh = 70, bl = 0;
@@ -297,17 +288,15 @@ int main(int argc, char *argv[])
 
 	for (;;)
 	{
+	startLoop:
 		// run topic callbacks
 		ros::spinOnce();
 		if (!ros::ok()) // exit loop once Ctrl + C is pressed
 			break;
 
-		// if max duration has passed, exit from loop
-		if (chrono::system_clock::now() >= endTime)
-		{
-			cout << "Maximum duration has passed. Exiting program..." << endl;
-			break;
-		}
+		// TODO deal with any incoming topic messages
+
+		if (EXEC_STATE == State::sleep) continue;
 
 		cap.read(frame);
 		if (frame.empty())
@@ -316,92 +305,61 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		// apply grayscale
-		Mat grayscaleImage = applyGrayscale(frame, Scalar(bl, gl, rl), Scalar(bh, gh, rh));
+		if (EXEC_STATE == State::docking) {
+			// apply grayscale
+			Mat grayscaleImage = applyGrayscale(frame, Scalar(bl, gl, rl), Scalar(bh, gh, rh));
 
-		// contours
-		vector<Point> mainContour = getContour(grayscaleImage);
-		Point2f center = getContourCenter(mainContour);
+			// contours
+			vector<Point> mainContour = getContour(grayscaleImage);
+			Point2f center = getContourCenter(mainContour);
 
-		if (center.x >= middleCoordinateWidth - VARIANCE * frameWidth &&
-			center.x <= middleCoordinateWidth + VARIANCE * frameWidth)
-		{
-			cout << "Point is in the middle: " << center.x << ", " << center.y << endl;
-		}
-
-		Mat bbox;
-		vector<string> data;
-
-		detector->detectAndDecodeMulti(frame, data, bbox);
-		if (!data.empty())
-		{
-			// TODO: determine need for timestamp and printing
-			for (string text : data)
+			if (center.x >= middleCoordinateWidth - VARIANCE * frameWidth &&
+				center.x <= middleCoordinateWidth + VARIANCE * frameWidth)
 			{
-				cout << getCurrentTimeString() << " - ";
-				printf("[%s] Decoded data: %s\n", detector->getName().c_str(), text.c_str());
-				checkTargetName(targetNames, text);
+				cout << "Point is in the middle: " << center.x << ", " << center.y << endl;
+			}
 
-				if (targetNames.empty())
+			if (DEBUG) {
+				// show contours
+				Mat contourImage(grayscaleImage.size(), CV_8UC3, Scalar(0, 0, 0));
+				applyContourVisual(frame, mainContour, center);
+				imshow("Docking", frame);
+			}
+		} else if (EXEC_STATE == State::detect) {
+			Mat bbox;
+			vector<string> data;
+
+			detector->detectAndDecodeMulti(frame, data, bbox);
+			if (!data.empty())
+			{
+				// TODO: determine need for timestamp and printing
+				for (string text : data)
 				{
-					cout << "\nAll targets found. Exiting program..." << endl;
-					goto endLoop;
+					cout << getCurrentTimeString() << " - ";
+					printf("[%s] Decoded data: %s\n", detector->getName().c_str(), text.c_str());
+					checkTargetName(targetNames, text);
+
+					if (targetNames.empty())
+					{
+						cout << "\nAll targets found. Entering sleep state..." << endl;
+						EXEC_STATE = State::sleep;
+						goto startLoop;
+					}
 				}
+			}
+
+			if (DEBUG) {
+				// embed bounding box around target
+				if (!data.empty()) embed(frame, bbox, data);
+				imshow("Detection", frame);
 			}
 		}
 
 		if (DEBUG)
-		{
-			// calculate average FPS for camera video
-			frameCounter++;
-			time_t timeNow = time(0) - timeBegin;
-
-			if (timeNow - tick >= 1)
-			{
-				tick++;
-				fps = frameCounter;
-				frameCounter = 0;
-			}
-
-			// display bounding box around target
-			if (!data.empty())
-			{
-				display(frame, bbox, data);
-			}
-
-			// show contours
-			Mat contourImage(grayscaleImage.size(), CV_8UC3, Scalar(0, 0, 0));
-			applyContourVisual(frame, mainContour, center);
-			applyContourVisual(contourImage, mainContour, center); // TODO: remove if necessary
-
-			imshow("Flag annotated", contourImage);
-
-			// show flag in grayscale image
-			imshow("Flag", grayscaleImage);
-
-			// insert average FPS counter into image matrix
-			putText(frame, format("Average FPS=%d", fps), Point(10, 10), FONT_HERSHEY_SIMPLEX, FONT_SIZE, Scalar(100, 255, 0));
-
-			// show image frame and wait for key press
-			namedWindow(targetWindowName, WINDOW_NORMAL);
-
-			createTrackbar("rh", targetWindowName, &rh, MAX_COLOR_VALUE);
-			createTrackbar("rl", targetWindowName, &rl, MAX_COLOR_VALUE);
-			createTrackbar("gh", targetWindowName, &gh, MAX_COLOR_VALUE);
-			createTrackbar("gl", targetWindowName, &gl, MAX_COLOR_VALUE);
-			createTrackbar("bh", targetWindowName, &bh, MAX_COLOR_VALUE);
-			createTrackbar("bl", targetWindowName, &bl, MAX_COLOR_VALUE);
-
-			imshow(targetWindowName, frame);
-
-			if (waitKey(5) >= 0)
-				break;
-		}
+			if (waitKey(5) >= 0) break;
 	}
 
-endLoop:
-	if (DEBUG)
-		destroyAllWindows();
+	if (DEBUG) destroyAllWindows();
 
 	return EXIT_SUCCESS;
 }
