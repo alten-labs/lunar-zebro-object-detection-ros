@@ -42,7 +42,8 @@ constexpr double FONT_SIZE = 0.3;
 constexpr int MAX_COLOR_VALUE = 255;
 constexpr double VARIANCE = 0.05; // % distance from middle vertical line
 
-enum class State {
+enum class State
+{
 	detect,
 	sleep,
 	docking,
@@ -195,12 +196,7 @@ void applyContourVisual(Mat &mat, vector<Point> contour, Point2f center)
 	circle(mat, center, 4, Scalar(255, 0, 0), -1);
 }
 
-void stopCallback(const std_msgs::Bool::ConstPtr &msg)
-{
-	ROS_INFO("I heard: [%s]", msg);
-}
-
-void dockingCallback(const std_msgs::Bool::ConstPtr &msg)
+void incomingMessageCallback(const std_msgs::Bool::ConstPtr &msg)
 {
 	ROS_INFO("I heard: [%s]", msg);
 }
@@ -211,12 +207,11 @@ int main(int argc, char *argv[])
 	ros::init(argc, argv, "object_detection");
 	ros::NodeHandle n;
 
-	// init subscribers
-	ros::Subscriber stopSub = n.subscribe("stopCamera", ROS_QUEUE_SIZE, stopCallback);
-	ros::Subscriber dockingSub = n.subscribe("docking", ROS_QUEUE_SIZE, dockingCallback);
+	// init subscriber
+	ros::Subscriber sub = n.subscribe("igluna2021_communication_incoming", ROS_QUEUE_SIZE, incomingMessageCallback);
 
-	// init publishers
-	// ros::Publisher
+	// init publisher
+	ros::Publisher pub = n.advertise<std_msgs::String>("igluna2021_communication_outgoing", ROS_QUEUE_SIZE);
 
 	CommandLineParser parser(argc, argv, keys);
 	parser.about("Lunar Zebro navigation - QR Code detection v1.0.0\nAuthor: Y. Zwetsloot\n");
@@ -297,7 +292,8 @@ int main(int argc, char *argv[])
 
 		// TODO deal with any incoming topic messages
 
-		if (EXEC_STATE == State::sleep) continue;
+		if (EXEC_STATE == State::sleep)
+			continue;
 
 		cap.read(frame);
 		if (frame.empty())
@@ -306,7 +302,8 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		if (EXEC_STATE == State::docking) {
+		if (EXEC_STATE == State::docking)
+		{
 			// apply grayscale
 			Mat grayscaleImage = applyGrayscale(frame, Scalar(bl, gl, rl), Scalar(bh, gh, rh));
 
@@ -320,13 +317,16 @@ int main(int argc, char *argv[])
 				cout << "Point is in the middle: " << center.x << ", " << center.y << endl;
 			}
 
-			if (DEBUG) {
+			if (DEBUG)
+			{
 				// show contours
 				Mat contourImage(grayscaleImage.size(), CV_8UC3, Scalar(0, 0, 0));
 				applyContourVisual(frame, mainContour, center);
 				imshow("Docking", frame);
 			}
-		} else if (EXEC_STATE == State::detect) {
+		}
+		else if (EXEC_STATE == State::detect)
+		{
 			Mat bbox;
 			vector<string> data;
 
@@ -349,18 +349,22 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			if (DEBUG) {
+			if (DEBUG)
+			{
 				// embed bounding box around target
-				if (!data.empty()) embed(frame, bbox, data);
+				if (!data.empty())
+					embed(frame, bbox, data);
 				imshow("Detection", frame);
 			}
 		}
 
 		if (DEBUG)
-			if (waitKey(5) >= 0) break;
+			if (waitKey(5) >= 0)
+				break;
 	}
 
-	if (DEBUG) destroyAllWindows();
+	if (DEBUG)
+		destroyAllWindows();
 
 	return EXIT_SUCCESS;
 }
