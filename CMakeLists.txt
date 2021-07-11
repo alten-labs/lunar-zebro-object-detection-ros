@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Comm.msg
+  Diagnostic.msg
+  Monitor.msg
 )
 
 generate_messages(

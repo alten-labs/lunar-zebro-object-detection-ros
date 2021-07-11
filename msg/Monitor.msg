@@ -1,0 +1,12 @@
+time stamp
+float32 avg_temp
+float32 avg_current
+float32 avg_volts
+bool protection_alert
+bool undercurrent_alert
+bool overcurrent_alert
+bool undervolt_alert
+bool overvolt_alert
+bool undertemp_alert
+bool overtemp_alert
+bool battery_alert
