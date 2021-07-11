@@ -208,7 +208,7 @@ void monitorMessageCallback(const object_detection::Monitor::ConstPtr &msg)
 	ROS_INFO("I heard: [%s]", msg);
 }
 
-void diagnosticsMessageCallback(const object_detection::Diagnostics::ConstPtr &msg)
+void diagnosticsMessageCallback(const object_detection::Diagnostic::ConstPtr &msg)
 {
 	ROS_INFO("I heard: [%s]", msg);
 }
