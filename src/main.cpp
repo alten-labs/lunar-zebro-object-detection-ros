@@ -21,6 +21,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Bool.h"
+#include "object_detection/Comm.h"
 
 using namespace cv;
 using namespace std;
