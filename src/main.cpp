@@ -198,7 +198,17 @@ void applyContourVisual(Mat &mat, vector<Point> contour, Point2f center)
 	circle(mat, center, 4, Scalar(255, 0, 0), -1);
 }
 
-void incomingMessageCallback(const std_msgs::Bool::ConstPtr &msg)
+void mainMessageCallback(const object_detection::Comm::ConstPtr &msg)
+{
+	ROS_INFO("I heard: [%s]", msg);
+}
+
+void monitorMessageCallback(const object_detection::Monitor::ConstPtr &msg)
+{
+	ROS_INFO("I heard: [%s]", msg);
+}
+
+void diagnosticsMessageCallback(const object_detection::Diagnostics::ConstPtr &msg)
 {
 	ROS_INFO("I heard: [%s]", msg);
 }
@@ -210,7 +220,9 @@ int main(int argc, char *argv[])
 	ros::NodeHandle n;
 
 	// init subscriber
-	ros::Subscriber sub = n.subscribe("igluna2021_communication_incoming", ROS_QUEUE_SIZE, incomingMessageCallback);
+	ros::Subscriber subMain = n.subscribe("igluna2021_communication_incoming", ROS_QUEUE_SIZE, mainMessageCallback);
+	ros::Subscriber subMonitor = n.subscribe("igluna2021_monitor_diagnostics", ROS_QUEUE_SIZE, monitorMessageCallback);
+	ros::Subscriber subDiagnostics = n.subscribe("igluna2021_communication_outgoing", ROS_QUEUE_SIZE, diagnosticsMessageCallback);
 
 	// init publisher
 	ros::Publisher pub = n.advertise<object_detection::Comm>("igluna2021_communication_outgoing", ROS_QUEUE_SIZE);
@@ -344,7 +356,7 @@ int main(int argc, char *argv[])
 					if (targetFound)
 					{
 						object_detection::Comm msg;
-						msg.priority = 0;
+						msg.priority = 1;
 						msg.recipient = "NAV";
 						msg.type = "DATA";
 						msg.message = text;
