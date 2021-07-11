@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
 	ros::Subscriber sub = n.subscribe("igluna2021_communication_incoming", ROS_QUEUE_SIZE, incomingMessageCallback);
 
 	// init publisher
-	ros::Publisher pub = n.advertise<std_msgs::String>("igluna2021_communication_outgoing", ROS_QUEUE_SIZE);
+	ros::Publisher pub = n.advertise<object_detection::Comm>("igluna2021_communication_outgoing", ROS_QUEUE_SIZE);
 
 	CommandLineParser parser(argc, argv, keys);
 	parser.about("Lunar Zebro navigation - QR Code detection v1.0.0\nAuthor: Y. Zwetsloot\n");
@@ -338,7 +338,19 @@ int main(int argc, char *argv[])
 				{
 					cout << getCurrentTimeString() << " - ";
 					printf("[%s] Decoded data: %s\n", detector->getName().c_str(), text.c_str());
-					checkTargetName(targetNames, text);
+					const bool targetFound = checkTargetName(targetNames, text);
+					if (targetFound) {
+						object_detection::Comm msg;
+						msg.priority = 0;
+						msg.recipient = "NAV";
+						msg.type = "DATA";
+
+						stringstream ss;
+						ss << "{ \"type\": \"DATA\", \"subsystem\": \"cam\", \"data\": \"" << text << "\" }";
+						msg.message = ss.str();
+
+						pub.publish(msg);
+					}
 
 					if (targetNames.empty())
 					{
