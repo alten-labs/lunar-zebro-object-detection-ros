@@ -22,6 +22,8 @@
 #include "std_msgs/String.h"
 #include "std_msgs/Bool.h"
 #include "object_detection/Comm.h"
+#include "object_detection/Diagnostic.h"
+#include "object_detection/Monitor.h"
 
 using namespace cv;
 using namespace std;
@@ -339,15 +341,13 @@ int main(int argc, char *argv[])
 					cout << getCurrentTimeString() << " - ";
 					printf("[%s] Decoded data: %s\n", detector->getName().c_str(), text.c_str());
 					const bool targetFound = checkTargetName(targetNames, text);
-					if (targetFound) {
+					if (targetFound)
+					{
 						object_detection::Comm msg;
 						msg.priority = 0;
 						msg.recipient = "NAV";
 						msg.type = "DATA";
-
-						stringstream ss;
-						ss << "{ \"type\": \"DATA\", \"subsystem\": \"cam\", \"data\": \"" << text << "\" }";
-						msg.message = ss.str();
+						msg.message = text;
 
 						pub.publish(msg);
 					}
