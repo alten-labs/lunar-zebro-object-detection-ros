@@ -21,12 +21,17 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "std_msgs/Bool.h"
+#include "std_msgs/Float32.h"
+#include "std_msgs/Int32.h"
 #include "object_detection/Comm.h"
 #include "object_detection/Diagnostic.h"
 #include "object_detection/Monitor.h"
 
+#include <nlohmann/json.hpp>
+
 using namespace cv;
 using namespace std;
+using json = nlohmann::json;
 
 string keys =
 	"{ help h      |       | Print help message. }"
@@ -39,16 +44,21 @@ string keys =
 	"0: ZBar (by default), "
 	"1: OpenCV }";
 
-constexpr int ROS_QUEUE_SIZE = 1000;
+constexpr int ROS_QUEUE_SIZE = 10;
 constexpr double FONT_SIZE = 0.3;
 constexpr int MAX_COLOR_VALUE = 255;
 constexpr double VARIANCE = 0.05; // % distance from middle vertical line
+constexpr float MIN_VOLTAGE = 12.8;
+constexpr float MAX_VOLTAGE = 16.8;
+constexpr float BATTERY_PERCENTAGE = 0.4;
+constexpr int SLEEP_LOOP_FREQUENCY = 1;
+constexpr int DOCKING_LOOP_FREQUENCY = 3;
 
 enum class State
 {
 	detect,
 	sleep,
-	docking,
+	dock,
 };
 
 State EXEC_STATE = State::detect;
@@ -131,7 +141,7 @@ bool checkTargetName(set<string> &targetNames, string text)
 Mat applyGrayscale(Mat &mat, const Scalar &low, const Scalar &high)
 {
 	// colored object detection
-	Mat element = getStructuringElement(MORPH_RECT, Size(5, 5)); // TODO: determine why?
+	Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
 	Mat isolation;
 
 	inRange(mat, low, high, isolation);
@@ -200,17 +210,50 @@ void applyContourVisual(Mat &mat, vector<Point> contour, Point2f center)
 
 void mainMessageCallback(const object_detection::Comm::ConstPtr &msg)
 {
-	ROS_INFO("I heard: [%s]", msg);
+	ROS_INFO("[MAIN] Incoming message: [%s]", msg->message.c_str());
+	const string message = msg->message;
+	const auto j = json::parse(message);
+
+	if (j.contains("cmd_id") && j.contains("cmd_value"))
+	{
+		if (j["cmd_id"] == 3 && j["cmd_value"] == 1)
+		{
+			cout << "Received command to start docking procedure" << endl;
+			EXEC_STATE = State::dock;
+		}
+
+		if (j["cmd_id"] == 4 && j["cmd_value"] == 1)
+		{
+			cout << "Received command to leave docking station" << endl;
+			EXEC_STATE = State::detect;
+		}
+	}
 }
 
-void monitorMessageCallback(const object_detection::Monitor::ConstPtr &msg)
+void monitorMessageCallback(const object_detection::Diagnostic::ConstPtr &msg)
 {
-	ROS_INFO("I heard: [%s]", msg);
+	ROS_INFO("[MONITOR] Average battery voltage: [%f]", msg->avg_volts);
+	const float batteryLevel = msg->avg_volts;
+
+	const float lowBatteryLevel = batteryLevel - MIN_VOLTAGE;
+	const float batteryPercentage = lowBatteryLevel / (MAX_VOLTAGE - MIN_VOLTAGE);
+
+	if (batteryPercentage <= BATTERY_PERCENTAGE)
+	{
+		cout << "Battery low alert, start docking procedure" << endl;
+		EXEC_STATE = State::dock;
+	}
 }
 
-void diagnosticsMessageCallback(const object_detection::Diagnostic::ConstPtr &msg)
+void wireMessageCallback(const std_msgs::Int32::ConstPtr &msg)
 {
-	ROS_INFO("I heard: [%s]", msg);
+	ROS_INFO("[WIRE] Magnetic guidance: [%d]", msg->data);
+	const int value = msg->data;
+	if (value == 0)
+	{
+		cout << "Magnetic guidance has taken over" << endl;
+		EXEC_STATE = State::sleep;
+	}
 }
 
 int main(int argc, char *argv[])
@@ -222,10 +265,16 @@ int main(int argc, char *argv[])
 	// init subscriber
 	ros::Subscriber subMain = n.subscribe("igluna2021_communication_incoming", ROS_QUEUE_SIZE, mainMessageCallback);
 	ros::Subscriber subMonitor = n.subscribe("igluna2021_monitor_diagnostics", ROS_QUEUE_SIZE, monitorMessageCallback);
-	ros::Subscriber subDiagnostics = n.subscribe("igluna2021_communication_outgoing", ROS_QUEUE_SIZE, diagnosticsMessageCallback);
+	ros::Subscriber subWire = n.subscribe("Wire_Detection", ROS_QUEUE_SIZE, wireMessageCallback);
 
 	// init publisher
 	ros::Publisher pub = n.advertise<object_detection::Comm>("igluna2021_communication_outgoing", ROS_QUEUE_SIZE);
+	ros::Publisher pubTurnObstacle = n.advertise<std_msgs::Float32>("/obstacle");
+	ros::Publisher pubTurnList = n.advertise<std_msgs::Float32>("List_GS");
+	ros::Publisher pubStopLIDAR = n.advertise<std_msgs::Int32>("/stop", ROS_QUEUE_SIZE);
+
+	ros::Rate sleep_rate(SLEEP_LOOP_FREQUENCY);
+	ros::Rate docking_rate(DOCKING_LOOP_FREQUENCY);
 
 	CommandLineParser parser(argc, argv, keys);
 	parser.about("Lunar Zebro navigation - QR Code detection v1.0.0\nAuthor: Y. Zwetsloot\n");
@@ -307,7 +356,10 @@ int main(int argc, char *argv[])
 		// TODO deal with any incoming topic messages
 
 		if (EXEC_STATE == State::sleep)
+		{
+			sleep_rate.sleep(); // ensure reduced loop rate
 			continue;
+		}
 
 		cap.read(frame);
 		if (frame.empty())
@@ -316,13 +368,18 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		if (EXEC_STATE == State::docking)
+		if (EXEC_STATE == State::dock)
 		{
 			// apply grayscale
 			Mat grayscaleImage = applyGrayscale(frame, Scalar(bl, gl, rl), Scalar(bh, gh, rh));
 
 			// contours
 			vector<Point> mainContour = getContour(grayscaleImage);
+			if (mainContour.empty())
+			{
+				cout << "Could not find docking target" << endl;
+				// TODO
+			}
 			Point2f center = getContourCenter(mainContour);
 
 			if (center.x >= middleCoordinateWidth - VARIANCE * frameWidth &&
@@ -358,7 +415,7 @@ int main(int argc, char *argv[])
 						object_detection::Comm msg;
 						msg.priority = 1;
 						msg.recipient = "NAV";
-						msg.type = "DATA";
+						msg.type = "12";
 						msg.message = text;
 
 						pub.publish(msg);

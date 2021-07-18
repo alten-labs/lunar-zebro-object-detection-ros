@@ -38,3 +38,6 @@ target_link_libraries(main ${OpenCV_LIBRARIES})
 
 include_directories(${ZBAR_INCLUDE_DIRS})
 target_link_libraries(main ${ZBAR_LIBRARIES} zbar)
+
+find_package(nlohmann_json 3.2.0 REQUIRED)
+target_link_libraries(main nlohmann_json::nlohmann_json)
