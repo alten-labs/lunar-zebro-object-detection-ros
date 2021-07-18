@@ -59,7 +59,16 @@ Decrease swap size again
 
 #### nlohmann/json
 
-TODO
+Same process as with OpenCV but it takes a bit less time.
+
+1. `cd ~`
+2. `git clone https://github.com/nlohmann/json`
+3. `cd json`
+4. `mkdir build`
+5. `cd build`
+6. `cmake ..`
+7. `make` (long step, should take about half an hour)
+8. `make install`
 
 #### Source code
 You can install the source code by cloning this repository in your workspace folder
