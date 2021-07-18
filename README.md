@@ -60,3 +60,17 @@ Decrease swap size again
 #### nlohmann/json
 
 TODO
+
+#### Source code
+You can install the source code by cloning this repository in your workspace folder
+
+1. `cd [workspace folder]/src`
+2. `git clone https://github.com/yzwetsloot/object_detection_ros`
+3. `mv object_detection_ros object_detection` (rename the folder name so that it's called `object_detection` instead
+
+Install the package by calling `catkin_make` etc.
+
+#### Running the source code
+The below command starts the object detection program in production mode, with 3 targets: `target1`, `target2` and `target3`
+
+`rosrun object_detection main -d=false -targets=target1,target2,target3`
