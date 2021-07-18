@@ -47,6 +47,12 @@ Go to home directory
 
 13. `sudo ldconfig` (as long as it does not give an error output it is OK)
 
+Decrease swap size again
+
+14. `sudo sed -i 's/CONF_SWAPSIZE=1024/CONF_SWAPSIZE=100/g' /etc/dphys-swapfile`
+15. `sudo /etc/init.d/dphys-swapfile stop`
+16. `sudo /etc/init.d/dphys-swapfile start`
+
 #### Enable camera
 [Use the instructions here to enable the camera on the Raspberry Pi](https://www.raspberrypi.org/documentation/usage/camera/installing.md) (make sure you click FINISH and do a reboot!)
 
