@@ -35,6 +35,7 @@ Increase swap size by carrying out the following commands below:
 9. `sudo /etc/init.d/dphys-swapfile start`
 
 Now make sure you're still in the `build` folder
+
 10. `make` (this will take a billion years, don't exit even if it seems to hang at 100%!)
 
 Once finished:
