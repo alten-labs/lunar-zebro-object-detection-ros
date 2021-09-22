@@ -1,0 +1,23 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ 'master' ]
+  pull_request:
+    branches: [ 'master' ]
+
+jobs:
+
+  build-test-focal:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+
+    - name: Build code for Ubuntu 20
+      run: docker build . -f ./docker/object-detection-ros-focal.Dockerfile -t object-detection-ros-focal/object-detection-ros-focal:latest-focal
+
+    - name: Test code
+      run: docker build . -f ./docker/test-object-detection-ros-focal.Dockerfile -t test
