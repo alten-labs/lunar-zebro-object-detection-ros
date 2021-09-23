@@ -10,6 +10,14 @@ The rover is designed to piggyback on any of the private or national space agenc
 
 In the course of the lunar day, the rover will test its unique six-legged locomotion. Once distant enough, this will allow it to take a unique picture of the lander and Earth. While walking, the rover shall avoid craters and boulders bigger than itself by using the onboard Semi-Autonomous Navigation System (SANS). At the end of the day, the rover will enter hibernation mode to face the -233°C lunar night. It will beacon when it wakes up, if ever.
 
+`DESTINATION : THE MOON
+
+LAUNCH : Q4 2022
+
+MISSION DURATION : 14 EARTH DAYS
+
+DISTANCE : 384,400 KM`
+
 ## Object Detection ROS
 
 ### Installation instructions
