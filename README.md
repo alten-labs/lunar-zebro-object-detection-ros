@@ -1,5 +1,5 @@
 <a href="https://zebro.space/" target="_blank">
-<img src=".assets/lunar-zebro-mission-badge.png" width="250" />
+<img src=".assets/lunar-zebro-mission-badge.png" width="300" />
 </a>
 
 ### Installation instructions
