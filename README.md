@@ -15,7 +15,7 @@ LAUNCH : Q4 2022
 MISSION DURATION : 14 EARTH DAYS
 DISTANCE : 384,400 KM
 ```
-[![Developed By TU Delft](https://img.shields.io/badge/developed%20by-TU%20Delft-0FA2DF)](https://www.tudelft.nl/) 
+[![Developed By TU Delft](https://img.shields.io/badge/developed%20by-tu%20delft-0FA2DF)](https://www.tudelft.nl/) 
 [![Maintained by Alton Labs](https://img.shields.io/badge/maintained%20by-alten%20labs-0FA2DF)](https://alten.com/) 
 [![Lunar Zebro](https://img.shields.io/badge/project-lunar%20zebro-0FA2DF)](https://zebro.space/) 
 
