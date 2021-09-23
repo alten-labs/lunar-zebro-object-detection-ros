@@ -1,3 +1,7 @@
+<a href="https://zebro.space/" target="_blank">
+<img src=".assets/lunar-zebro-mission-badge.png" width="250" />
+</a>
+
 ### Installation instructions
 
 Start of by going to the home directory of the Raspberry Pi: `cd ~`
