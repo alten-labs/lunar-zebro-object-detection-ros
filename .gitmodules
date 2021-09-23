@@ -1,0 +1,12 @@
+[submodule "submodules/zbar"]
+	path = submodules/zbar
+	url = https://github.com/mchehab/zbar
+[submodule "submodules/opencv"]
+	path = submodules/opencv
+	url = https://github.com/opencv/opencv
+[submodule "submodules/opencv_contrib"]
+	path = submodules/opencv_contrib
+	url = https://github.com/opencv/opencv_contrib
+[submodule "submodules/nlohman-json"]
+	path = submodules/nlohman-json
+	url = https://github.com/nlohmann/json
