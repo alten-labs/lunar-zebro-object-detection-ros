@@ -2,6 +2,14 @@
 <img src=".assets/lunar-zebro-mission-badge.png" width="300" />
 </a>
 
+# LUNAR ZEBRO
+
+## WORLD’S SMALLEST AND LIGHTEST ROVER YET, BUILT BY TU DELFT STUDENTS
+
+The rover is designed to piggyback on any of the private or national space agency’s Moon landers. Once on the Moon, the rover’s main objective is to survive the harsh lunar conditions for one lunar day (14 Earth days) and communicate its location and health directly back to Earth.
+
+In the course of the lunar day, the rover will test its unique six-legged locomotion. Once distant enough, this will allow it to take a unique picture of the lander and Earth. While walking, the rover shall avoid craters and boulders bigger than itself by using the onboard Semi-Autonomous Navigation System (SANS). At the end of the day, the rover will enter hibernation mode to face the -233°C lunar night. It will beacon when it wakes up, if ever.
+
 ### Installation instructions
 
 Start of by going to the home directory of the Raspberry Pi: `cd ~`
