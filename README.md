@@ -1,10 +1,10 @@
-<a href="https://zebro.space/" target="_blank">
-<img src=".assets/lunar-zebro-mission-badge.png" width="300" />
-</a>
-
 # LUNAR ZEBRO
 
 ### The Worlds’s smallest and lightest rover yet, built by TU Delft students.
+
+<a href="https://zebro.space/" target="_blank">
+<img src=".assets/lunar-zebro-mission-badge.png" width="300" title="lunar-zebro-mission-badge" align="left" style="display: inline" />
+</a>
 
 The rover is designed to piggyback on any of the private or national space agency’s Moon landers. Once on the Moon, the rover’s main objective is to survive the harsh lunar conditions for one lunar day (14 Earth days) and communicate its location and health directly back to Earth.
 
