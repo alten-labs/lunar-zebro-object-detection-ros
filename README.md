@@ -110,3 +110,12 @@ Install the package by calling `catkin_make` etc.
 The below command starts the object detection program in production mode, with 3 targets: `target1`, `target2` and `target3`
 
 `rosrun object_detection main -d=false -targets=target1,target2,target3`
+
+## License
+
+This code is released under the MIT License. Please see
+[LICENSE](/LICENSE) and [NOTICE](/NOTICE) for more details.
+
+<a href="https://opensource.org/" target="_blank">
+<img src=".assets/al-osi-love.png" />
+</a>
