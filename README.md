@@ -19,6 +19,10 @@ DISTANCE : 384,400 KM
 [![Maintained by Alton Labs](https://img.shields.io/badge/maintained%20by-alten%20labs-0FA2DF)](https://alten.com/) 
 [![Lunar Zebro](https://img.shields.io/badge/project-lunar%20zebro-0FA2DF)](https://zebro.space/) 
 
+<a href="https://alten.nl" target="_blank">
+<img src=".assets/alten-zebro-partners.png" />
+</a>
+
 ## Object Detection ROS
 
 ### Installation instructions
