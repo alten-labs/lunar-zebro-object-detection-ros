@@ -1,22 +1,14 @@
-name: Docker Image CI
-
+name: "Docker Image CI"
 on:
   push:
   schedule:
     - cron:  '0 3 * * *'
-
 jobs:
-
   build-test-focal:
-
     runs-on: ubuntu-20.04
-
     steps:
     - uses: actions/checkout@v2
-
-
     - name: Build code for Ubuntu 20
-      run: docker build . -f ./docker/object-detection-ros-focal.Dockerfile -t object-detection-ros-focal/object-detection-ros-focal:latest-focal
-
+      run: docker build . -f ./docker/object-detection-ros-focal.Dockerfile -t object-detection-ros:latest-focal
     - name: Test code
       run: docker build . -f ./docker/test-object-detection-ros-focal.Dockerfile -t test

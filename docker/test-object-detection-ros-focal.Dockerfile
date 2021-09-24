@@ -1,4 +1,4 @@
-FROM object-detection-ros-focal/object-detection-ros-focal:latest-focal
+FROM object-detection-ros:latest-focal
 
 
 RUN echo 'TEST CODE!'
